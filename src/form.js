@@ -1,4 +1,6 @@
 
+
+
 const formFields = [
     {
         id: 'helpType',
@@ -7,10 +9,10 @@ const formFields = [
         placeholder: 'בחר סוג מענה',
         options: [
 
-           'שילוב',
-           'אל"ה',
-           'סל אישי',
-           'מורה באמצעות',
+            'שילוב',
+            'אל"ה',
+            'סל אישי',
+            'מורה באמצעות',
             'פרטני-אנגלית',
             'פרטני-מתמטיקה',
             'פרטני-מדעים',
@@ -41,7 +43,7 @@ const formFields = [
     {
         id: 'students',
         type: 'search-select',
-        label: 'בחר את התלמיד/ים לו/להם אתה נותן מענה ',
+        label: `בחר את התלמידים להם אתה נותן מענה זה<br><span class="text-sm text-gray-600">כתבו את שם התלמיד ולחצו עליו מתוך הרשימה הנפתחת</span>`,
         placeholder: 'שם התלמיד',
         options: getMockStudentData()
     },
@@ -63,3 +65,5 @@ const formFields = [
 
 // Create a global reference that works in both environments
 globalThis.formFields = formFields;
+
+

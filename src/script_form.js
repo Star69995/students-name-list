@@ -1,4 +1,6 @@
 
+
+
 let formCounter = 1;
 
 // ================================================================
@@ -192,7 +194,7 @@ function createSearchFormField(field, name, placeholder, options) {
 function createFormFieldLabel(name, label) {
     const labelElement = document.createElement('label');
     labelElement.className = 'input-label';
-    labelElement.textContent = label;
+    labelElement.innerHTML = label;
     labelElement.htmlFor = name;
     const appendit = `<span class="text-red-500">*</span>`;
     labelElement.innerHTML += appendit;
@@ -375,5 +377,7 @@ document.getElementById('addResponseBtn').addEventListener('click', function () 
 //         updateClassCheckboxes(newIndex);
 //     });
 // }
+
+
 
 

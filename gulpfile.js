@@ -31,14 +31,14 @@ gulp.task("js-to-gas", function () {
         .pipe(gulp.dest(dist));
 });
 
-// Convert local code.js → code.gs (backend GAS file)
-gulp.task("js-to-gs", function () {
-    return gulp.src(`${src}/code.js`, { allowEmpty: true })
-        .pipe(rename(function (path) {
-            path.extname = ".gs";   // just rename extension
-        }))
-        .pipe(gulp.dest(dist));
-});
+// // Convert local code.js → code.gs (backend GAS file)
+// gulp.task("js-to-gs", function () {
+//     return gulp.src(`${src}/code.js`, { allowEmpty: true })
+//         .pipe(rename(function (path) {
+//             path.extname = ".gs";   // just rename extension
+//         }))
+//         .pipe(gulp.dest(dist));
+// });
 
 // Convert local index.html → GAS-style (replace <link>/<script> with includes)
 gulp.task("html-to-gas", function () {
@@ -69,7 +69,7 @@ gulp.task("assets-to-gas", function () {
 
 // Grouped conversion
 gulp.task("to-gas",
-    gulp.series("css-to-gas", "js-to-gas", "js-to-gs", "html-to-gas", "assets-to-gas")
+    gulp.series("css-to-gas", "js-to-gas",  "html-to-gas", "assets-to-gas")
 );
 
 
@@ -141,16 +141,16 @@ gulp.task("gas-to-html", function () {
         .pipe(gulp.dest(src));
 });
 
-// copy *.js to *.gs
-gulp.task("gas-to-gs", function () {
-    return gulp.src(`${dist}/*.js`,
-        { allowEmpty: true }
-    )
-        .pipe(rename(function (path) {
-            path.extname = ".gs";
-        }))
-        .pipe(gulp.dest(src));
-});
+// // copy *.js to *.gs
+// gulp.task("gas-to-gs", function () {
+//     return gulp.src(`${dist}/*.js`,
+//         { allowEmpty: true }
+//     )
+//         .pipe(rename(function (path) {
+//             path.extname = ".gs";
+//         }))
+//         .pipe(gulp.dest(src));
+// });
 
 // Copy other assets
 gulp.task("gas-assets-to-local", function () {
@@ -175,7 +175,7 @@ gulp.task("gas-assets-to-local", function () {
 });
 
 // Grouped
-gulp.task("to-local", gulp.series("gas-to-css", "gas-to-js", "gas-to-html", "gas-to-gs", "gas-assets-to-local"));
+gulp.task("to-local", gulp.series("gas-to-css", "gas-to-js", "gas-to-html", "gas-assets-to-local"));
 
 
 

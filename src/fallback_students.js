@@ -2,6 +2,8 @@
 
 
 
+
+
 // Mock data fallback
 function getMockStudentData() {
     return {
@@ -104,6 +106,8 @@ function getMockStudentData() {
 
 // Create a global reference that works in both environments
 globalThis.getMockStudentData = getMockStudentData;
+
+
 
 
 

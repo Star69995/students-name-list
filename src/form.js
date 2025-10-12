@@ -1,7 +1,3 @@
-
-
-
-
 const formFields = [
     {
         id: 'helpType',
@@ -9,7 +5,6 @@ const formFields = [
         label: 'איזה סוג מענה אני נותן?',
         placeholder: 'בחר סוג מענה',
         options: [
-
             'שילוב',
             'אל"ה',
             'סל אישי',
@@ -28,19 +23,6 @@ const formFields = [
             'הכלה לימודית',
             'הכלה בספורט',]
     },
-    // {
-    //     id: 'grade',
-    //     type: 'select',
-    //     label: 'השכבה בה אני נותן מענה זה',
-    //     placeholder: 'בחר שכבה',
-    //     options: ['ז', 'ח', 'ט']
-    // },
-    // {
-    //     id: 'class',
-    //     type: 'checkbox-select',
-    //     label: 'באיזה כיתה/כיתות אני נותן את המענה?',
-    //     options: ['1', '2', '3', '4', '5', '6', '7']
-    // },
     {
         id: 'students',
         type: 'search-select',
@@ -66,6 +48,3 @@ const formFields = [
 
 // Create a global reference that works in both environments
 globalThis.formFields = formFields;
-
-
-

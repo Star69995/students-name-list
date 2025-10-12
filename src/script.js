@@ -1,7 +1,3 @@
-
-
-
-
 // Global variable to store student data from Google Sheets
 // let studentsData = {};
 let currentResponseCount = 1;
@@ -56,21 +52,38 @@ function validateForm() {
 
     // Process each form separately
     for (const form of forms) {
-        const inputFields = form.querySelectorAll('input, select');
+        // Check for students
+        const students = form.querySelectorAll('input[type="checkbox"]:checked');
+        if (students.length === 0) {
+            alert('יש לבחור לפחות תלמיד אחד בכל מענה');
+            return false;
+        }
 
-        for (const inputField of inputFields) {
-            if (inputField.id.includes('_search')) {
-                // Get checkboxes only in this form
-                const students = form.querySelectorAll('input[type="checkbox"]:checked');
+        // Check response type
+        const helpType = form.querySelector("[id*='helpType']");
+        if (!helpType || !helpType.value.trim()) {
+            alert('יש לבחור סוג מענה');
+            helpType?.focus();
+            return false;
+        }
 
-                if (students.length === 0) {
-                    alert('יש לבחור לפחות תלמיד אחד בטופס');
-                    return false;
-                }
+        // Check time slots
+        const timeSlotsContainer = form.querySelector('[id^="timeSlotsContainer"]');
+        const timeSlots = timeSlotsContainer.querySelectorAll('.time-slot-container');
+
+        for (const slot of timeSlots) {
+            const daySelect = slot.querySelector('select[id^="day"]');
+            const hourSelect = slot.querySelector('select[id^="hour"]');
+
+            if (!daySelect || !daySelect.value.trim()) {
+                alert('יש לבחור יום בכל מועד');
+                daySelect?.focus();
+                return false;
             }
-            else if (inputField.type !== 'checkbox' && inputField.value.trim() === '') {
-                alert('יש למלא את כל השדות');
-                inputField.focus();
+
+            if (!hourSelect || !hourSelect.value.trim()) {
+                alert('יש לבחור שעה בכל מועד');
+                hourSelect?.focus();
                 return false;
             }
         }
@@ -80,6 +93,11 @@ function validateForm() {
 }
 
 function submitForm() {
+    // Validate form first
+    if (!validateForm()) {
+        return;
+    }
+
     // Show loading state
     const submitBtn = document.getElementById('submitBtn');
     const originalText = submitBtn.textContent;
@@ -99,8 +117,12 @@ function submitForm() {
 
     // Process each form separately
     for (const form of forms) {
-        formData.responses.push(collectResponseData(form))
+        const responseDataArray = collectResponseData(form);
+        // Add all responses (split by time slots) to the array
+        formData.responses.push(...responseDataArray);
     }
+
+    // console.log('Form data to submit:', formData);
 
     // Send data to Google Apps Script
     try {
@@ -174,19 +196,47 @@ function disableForm() {
     }
 }
 
-
+/**
+ * Collects response data from a form and splits it into multiple responses
+ * if there are multiple time slots
+ * @param {HTMLFormElement} form - The form element to collect data from
+ * @returns {Array} Array of response objects, one per time slot
+ */
 function collectResponseData(form) {
-    const responseData = {
-        responseType: form.querySelector("[id*='helpType']").value,
-        students: [],
-        day: form.querySelector("[id*='day']").value,
-        hour: form.querySelector("[id*='hour']").value,
-        students: parseStudentData(form.querySelectorAll('input[type="checkbox"]:checked'))
-    };
+    // Get basic response data
+    const responseType = form.querySelector("[id*='helpType']").value;
+    const students = parseStudentData(form.querySelectorAll('input[type="checkbox"]:checked'));
 
-    return responseData;
+    // Get all time slots for this form
+    const timeSlotsContainer = form.querySelector('[id^="timeSlotsContainer"]');
+    const timeSlots = timeSlotsContainer.querySelectorAll('.time-slot-container');
+
+    // Create an array to hold all responses
+    const responses = [];
+
+    // For each time slot, create a separate response object
+    timeSlots.forEach(slot => {
+        const daySelect = slot.querySelector('select[id^="day"]');
+        const hourSelect = slot.querySelector('select[id^="hour"]');
+
+        const responseData = {
+            responseType: responseType,
+            day: daySelect.value,
+            hour: hourSelect.value,
+            students: students // Same students for all time slots
+        };
+
+        responses.push(responseData);
+    });
+
+    return responses;
 }
 
+/**
+ * Parses student data from checked checkboxes
+ * @param {NodeList} studentsNodeList - NodeList of checked checkbox inputs
+ * @returns {Array} Array of student objects
+ */
 function parseStudentData(studentsNodeList) {
     const students = [];
 
@@ -214,6 +264,3 @@ function parseStudentData(studentsNodeList) {
 
     return students;
 }
-
-
-

@@ -2,6 +2,8 @@
 
 
 
+
+
   // Function to load student data from Google Sheets
 function loadStudentsData() {
     console.log("Loading students data...");
@@ -68,6 +70,8 @@ function onStudentsDataError() {
     showMessage('התרחשה שגיאה בטעינת נתוני התלמידים. האפליקציה פועלת עם נתונים לדוגמה.', 'warning');
     onFinally()
 }
+
+
 
 
 

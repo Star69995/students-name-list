@@ -1,8 +1,5 @@
-
-
-
-
 let formCounter = 1;
+let timeSlotCounters = {}; // Track time slot counters for each form
 
 // ================================================================
 // Create search student Field
@@ -192,22 +189,24 @@ function createSearchFormField(field, name, placeholder, options) {
 // Create Form Field
 // ================================================================
 
-function createFormFieldLabel(name, label) {
+function createFormFieldLabel(name, label, required = true) {
     const labelElement = document.createElement('label');
     labelElement.className = 'input-label';
     labelElement.innerHTML = label;
     labelElement.htmlFor = name;
-    const appendit = `<span class="text-red-500">*</span>`;
-    labelElement.innerHTML += appendit;
+    if (required) {
+        const appendit = `<span class="text-red-500">*</span>`;
+        labelElement.innerHTML += appendit;
+    }
 
     return labelElement
 }
 
-function createFormField(name, type, label, placeholder, options) {
+function createFormField(name, type, label, placeholder, options, required = true) {
     const fieldContainer = document.createElement('div');
     fieldContainer.className = 'form-control';
 
-    const labelElement = createFormFieldLabel(name, label);
+    const labelElement = createFormFieldLabel(name, label, required);
     fieldContainer.appendChild(labelElement);
 
     let field
@@ -259,7 +258,6 @@ function createFormField(name, type, label, placeholder, options) {
         });
     } else if (type === 'search-select') {
         field = createSearchFormField(field, name, placeholder, options);
-        
     }
 
     fieldContainer.appendChild(field);
@@ -267,119 +265,292 @@ function createFormField(name, type, label, placeholder, options) {
     return fieldContainer;
 }
 
+// ================================================================
+// Create Time Slot
+// ================================================================
+
+function createTimeSlot(formNum, slotNum, dayOptions, hourOptions) {
+    const timeSlotContainer = document.createElement('div');
+    timeSlotContainer.className = 'time-slot-container bg-gray-50 p-4 rounded-lg border border-gray-200 mb-3';
+    timeSlotContainer.dataset.slotNum = slotNum;
+
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'flex items-center justify-between mb-3';
+
+    const slotTitle = document.createElement('h4');
+    slotTitle.className = 'text-md font-medium text-gray-700';
+    slotTitle.textContent = `יום ושעה #${slotNum}`;
+
+    const removeSlotBtn = document.createElement('button');
+    removeSlotBtn.type = 'button';
+    removeSlotBtn.className = 'text-red-500 hover:text-red-700 text-sm font-medium transition';
+    removeSlotBtn.innerHTML = '✖ הסר';
+
+    removeSlotBtn.addEventListener('click', () => {
+        timeSlotContainer.remove();
+        renumberTimeSlots(formNum);
+    });
+
+    headerDiv.appendChild(slotTitle);
+    if (slotNum > 1) { // Don't show remove button for first slot
+        headerDiv.appendChild(removeSlotBtn);
+    }
+
+    timeSlotContainer.appendChild(headerDiv);
+
+    const fieldsDiv = document.createElement('div');
+    fieldsDiv.className = 'grid grid-cols-1 md:grid-cols-2 gap-4';
+
+    // Day field
+    const dayField = createFormField(
+        `day${formNum}_${slotNum}`,
+        'select',
+        'יום',
+        'בחר יום',
+        dayOptions,
+        true
+    );
+
+    // Hour field
+    const hourField = createFormField(
+        `hour${formNum}_${slotNum}`,
+        'select',
+        'שעה',
+        'בחר שעה',
+        hourOptions,
+        true
+    );
+
+    fieldsDiv.appendChild(dayField);
+    fieldsDiv.appendChild(hourField);
+    timeSlotContainer.appendChild(fieldsDiv);
+
+    return timeSlotContainer;
+}
+
+// ================================================================
+// Renumber Time Slots
+// ================================================================
+
+function renumberTimeSlots(formNum) {
+    const timeSlotsContainer = document.getElementById(`timeSlotsContainer${formNum}`);
+    const slots = timeSlotsContainer.querySelectorAll('.time-slot-container');
+
+    slots.forEach((slot, index) => {
+        const newSlotNum = index + 1;
+        slot.dataset.slotNum = newSlotNum;
+
+        // Update title
+        const title = slot.querySelector('h4');
+        title.textContent = `יום ושעה #${newSlotNum}`;
+
+        // Update field IDs and names
+        const daySelect = slot.querySelector('select[id^="day"]');
+        const hourSelect = slot.querySelector('select[id^="hour"]');
+        const dayLabel = slot.querySelector('label[for^="day"]');
+        const hourLabel = slot.querySelector('label[for^="hour"]');
+
+        if (daySelect) {
+            daySelect.id = `day${formNum}_${newSlotNum}`;
+            daySelect.name = `day${formNum}_${newSlotNum}`;
+            if (dayLabel) dayLabel.htmlFor = `day${formNum}_${newSlotNum}`;
+        }
+
+        if (hourSelect) {
+            hourSelect.id = `hour${formNum}_${newSlotNum}`;
+            hourSelect.name = `hour${formNum}_${newSlotNum}`;
+            if (hourLabel) hourLabel.htmlFor = `hour${formNum}_${newSlotNum}`;
+        }
+
+        // Show/hide remove button
+        const removeBtn = slot.querySelector('button');
+        if (removeBtn) {
+            if (newSlotNum === 1) {
+                removeBtn.classList.add('hidden');
+            } else {
+                removeBtn.classList.remove('hidden');
+            }
+        }
+    });
+
+    timeSlotCounters[formNum] = slots.length;
+}
+
+// ================================================================
+// Create Form
+// ================================================================
+
 function createForm() {
     const num = formCounter;
     formCounter++;
+    timeSlotCounters[num] = 1; // Initialize time slot counter
+
     const form = document.createElement('form');
     form.className = 'form-section';
+    form.id = `responseForm${num}`;
 
     const section = document.createElement('div');
     section.className = 'form-section';
-    section.innerHTML = `<h3 class="text-xl font-semibold text-sky-700 mb-4 flex items-center">
-                        <svg class="w-6 h-6 mr-2 inline-block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                            fill="#0ea5e9">
-                            <path
-                                d="M9 12h6m-6-4h6m-6 8h3m3-12H8a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V6a2 2 0 00-2-2z"
-                                stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" fill="none" />
-                        </svg>
-                        מענה מספר ${num} שאני נותן
-                    </h3>`
+    section.innerHTML = `
+    <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xl font-semibold text-sky-700 flex items-center">
+            <svg class="w-6 h-6 mr-2 inline-block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="#0ea5e9">
+                <path
+                    d="M9 12h6m-6-4h6m-6 8h3m3-12H8a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V6a2 2 0 00-2-2z"
+                    stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" fill="none" />
+            </svg>
+            מענה מספר ${num} שאני נותן
+        </h3>
+
+        <button type="button" class="remove-response-btn text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg px-4 py-2 flex items-center gap-2 transition-all duration-200 font-medium text-sm"
+                data-response="${num}">
+            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+            מחק מענה זה
+        </button>
+    </div>
+    `;
     form.appendChild(section);
 
-    formFields.forEach(field => {
-        const fieldContainer = createFormField(`${field.id}${num}`, field.type, field.label, field.placeholder, field.options);
+    // Add regular form fields (except day and hour)
+    const fieldsToAdd = formFields.filter(field => field.id !== 'day' && field.id !== 'hour');
+    fieldsToAdd.forEach(field => {
+        const fieldContainer = createFormField(
+            `${field.id}${num}`,
+            field.type,
+            field.label,
+            field.placeholder,
+            field.options
+        );
         form.appendChild(fieldContainer);
+    });
+
+    // Create time slots section
+    const timeSlotsSection = document.createElement('div');
+    timeSlotsSection.className = 'form-control';
+
+    const timeSlotsLabel = document.createElement('div');
+    timeSlotsLabel.className = 'flex items-center justify-between mb-3';
+    timeSlotsLabel.innerHTML = `
+        <label class="input-label">
+            ימים ושעות
+            <span class="text-red-500">*</span>
+        </label>
+    `;
+
+    timeSlotsSection.appendChild(timeSlotsLabel);
+
+    // Container for time slots
+    const timeSlotsContainer = document.createElement('div');
+    timeSlotsContainer.id = `timeSlotsContainer${num}`;
+    timeSlotsContainer.className = 'space-y-3';
+
+    // Find day and hour options from formFields
+    const dayField = formFields.find(f => f.id === 'day');
+    const hourField = formFields.find(f => f.id === 'hour');
+
+    // Add first time slot
+    const firstSlot = createTimeSlot(num, 1, dayField.options, hourField.options);
+    timeSlotsContainer.appendChild(firstSlot);
+
+    timeSlotsSection.appendChild(timeSlotsContainer);
+
+    // Add time slot button
+    const addTimeSlotBtn = document.createElement('button');
+    addTimeSlotBtn.type = 'button';
+    addTimeSlotBtn.className = 'mt-3 mx-auto text-sky-600 hover:text-sky-700 hover:bg-sky-50 rounded-lg px-4 py-2 flex items-center gap-2 transition-all duration-200 font-medium text-sm border border-sky-300 hover:border-sky-500';
+    addTimeSlotBtn.innerHTML = `
+        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+        </svg>
+        הוסף יום ושעה נוספים
+    `;
+
+    addTimeSlotBtn.addEventListener('click', () => {
+        timeSlotCounters[num]++;
+        const newSlot = createTimeSlot(num, timeSlotCounters[num], dayField.options, hourField.options);
+        timeSlotsContainer.appendChild(newSlot);
+    });
+
+    timeSlotsSection.appendChild(addTimeSlotBtn);
+    form.appendChild(timeSlotsSection);
+
+    // Add event listener to the delete button
+    const removeBtn = form.querySelector('.remove-response-btn');
+    removeBtn.addEventListener('click', () => {
+        const confirmDialog = document.createElement('div');
+        confirmDialog.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        confirmDialog.innerHTML = `
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-md mx-4">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">אישור מחיקה</h3>
+            <p class="text-gray-600 mb-6">האם אתה בטוח שברצונך למחוק מענה מספר ${num}?</p>
+            <div class="flex gap-3 justify-end">
+                <button class="cancel-btn px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition font-medium">
+                    ביטול
+                </button>
+                <button class="confirm-btn px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition font-medium">
+                    מחק
+                </button>
+            </div>
+        </div>
+        `;
+
+        document.body.appendChild(confirmDialog);
+
+        confirmDialog.querySelector('.cancel-btn').addEventListener('click', () => {
+            confirmDialog.remove();
+        });
+
+        confirmDialog.querySelector('.confirm-btn').addEventListener('click', () => {
+            confirmDialog.remove();
+            form.remove();
+            delete timeSlotCounters[num];
+            renumberResponseSections();
+        });
+
+        confirmDialog.addEventListener('click', (e) => {
+            if (e.target === confirmDialog) {
+                confirmDialog.remove();
+            }
+        });
     });
 
     document.getElementById('responseSectionsContainer').appendChild(form);
 }
 
-// TODO: add ability to remove responses
+// ================================================================
+// Renumber Response Sections
+// ================================================================
+
+function renumberResponseSections() {
+    const sections = document.querySelectorAll('.form-section');
+    let newIndex = 1;
+
+    sections.forEach(section => {
+        const headerText = section.querySelector('h3');
+        if (headerText) {
+            headerText.innerHTML = headerText.innerHTML.replace(/מענה מספר \d+/,
+                `מענה מספר ${newIndex}`);
+        }
+
+        const removeBtn = section.querySelector('.remove-response-btn');
+        if (removeBtn) {
+            removeBtn.setAttribute('data-response', newIndex);
+        }
+
+        section.id = `responseForm${newIndex}`;
+        newIndex++;
+    });
+
+    formCounter = newIndex;
+}
+
+// ================================================================
+// Event Listeners
+// ================================================================
 
 document.getElementById('addResponseBtn').addEventListener('click', function () {
     createForm();
 });
-
-// function renumberResponseSections() {
-//     const sections = document.querySelectorAll('[id^="responseSection"]');
-//     let newIndex = 1;
-
-//     sections.forEach(section => {
-//         const oldIndex = section.id.replace('responseSection', '');
-
-//         if (oldIndex != newIndex) {
-//             // Update section ID
-//             section.id = `responseSection${newIndex}`;
-
-//             // Update heading
-//             const heading = section.querySelector('h3');
-//             heading.innerHTML = heading.innerHTML.replace(`מענה מספר ${oldIndex} שאני נותן`, `מענה מספר ${newIndex} שאני נותן`);
-
-//             // Update remove button data attribute
-//             const removeBtn = section.querySelector('.remove-response-btn');
-//             if (removeBtn) {
-//                 removeBtn.setAttribute('data-response', newIndex);
-//             }
-
-//             // Update all input IDs and labels
-//             updateElementIds(section, oldIndex, newIndex);
-//         }
-
-//         newIndex++;
-//     });
-
-//     // Update current response count
-//     formCounter = newIndex - 1;
-// }
-
-
-// function updateElementIds(section, oldIndex, newIndex) {
-//     // Update select elements
-//     ['responseType', 'grade', 'day', 'hour'].forEach(prefix => {
-//         const element = document.getElementById(`${prefix}${oldIndex}`);
-//         if (element) {
-//             element.id = `${prefix}${newIndex}`;
-//             // Update associated label
-//             const label = section.querySelector(`label[for="${prefix}${oldIndex}"]`);
-//             if (label) {
-//                 label.setAttribute('for', `${prefix}${newIndex}`);
-//             }
-//         }
-//     });
-
-//     // Update class checkboxes
-//     const checkboxContainer = section.querySelector(`#classCheckboxes${oldIndex}`);
-//     if (checkboxContainer) {
-//         checkboxContainer.id = `classCheckboxes${newIndex}`;
-
-//         const checkboxes = checkboxContainer.querySelectorAll('input[type="checkbox"]');
-//         checkboxes.forEach(checkbox => {
-//             const classNum = checkbox.value;
-//             checkbox.id = `class${newIndex}_${classNum}`;
-//             checkbox.setAttribute('data-response', newIndex);
-
-//             // Update associated label
-//             const label = checkboxContainer.querySelector(`label[for="class${oldIndex}_${classNum}"]`);
-//             if (label) {
-//                 label.setAttribute('for', `class${newIndex}_${classNum}`);
-//             }
-//         });
-//     }
-
-//     // Update students container
-//     const studentsContainer = section.querySelector(`#studentsContainer${oldIndex}`);
-//     if (studentsContainer) {
-//         studentsContainer.id = `studentsContainer${newIndex}`;
-//     }
-
-//     // Re-setup event listeners
-//     setupClassCheckboxes(newIndex);
-//     document.getElementById(`grade${newIndex}`).addEventListener('change', function () {
-//         updateClassCheckboxes(newIndex);
-//     });
-// }
-
-
-
-
-
